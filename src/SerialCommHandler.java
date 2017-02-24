@@ -6,6 +6,8 @@
 package com.mycompany.protocol;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Scanner;
 import jssc.SerialPort;
 import jssc.SerialPortException;
@@ -56,38 +58,42 @@ public class SerialCommHandler
     public byte[] read(int byteCount, int timeOut) throws IOException, SerialPortTimeoutException
     {
         boolean keepReading = false;
-        int i = 0;
+        boolean isETXFound = false;
+        ArrayList<Byte> bufferList = new ArrayList<Byte>();
+        MessageCollector messageCollector = new MessageCollector();
         
         do{
-              
             try 
             {
-                //buffer = serialPortTwo.readBytes(10);
-                buffer = serialPort.readBytes(byteCount, timeOut);
-                System.out.println(buffer);
+                byte[] tempBuffer;
+                tempBuffer = serialPort.readBytes(byteCount, timeOut);
+                bufferList = messageCollector.appendBytes(tempBuffer, bufferList);
+               
             }catch (SerialPortException ex) 
             {
                 System.err.println("ERROR reading bytes from COM port: " + ex);
             }
             
-            if(keepReading && buffer[i] == 0x03)
-            {
-                 keepReading = false;
-            }
-            
-            if (buffer[i] == 0x02)
+            if (messageCollector.isSTX(bufferList))
             {
                 keepReading = true;
             }
-            else
-            {
-                return buffer;
-            }
-            i++;
             
+            if(keepReading && messageCollector.isETX(bufferList) && messageCollector.isSTX(bufferList))
+            {
+                 isETXFound = true;
+            }
+            
+            if (isETXFound)
+            {
+                bufferList = messageCollector.removeBytes(messageCollector.getEtxIndex() + 1, bufferList);
+                keepReading = false;
+            }
+            
+
         }while(keepReading);
         
-        return buffer;  
+        return messageCollector.createByteArray(bufferList);
     }
     
     public String read() throws IOException
