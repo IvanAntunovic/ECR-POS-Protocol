@@ -40,8 +40,8 @@ public class Main
             Scanner input = new Scanner(System.in);
             System.out.print("Please enter path to your ini file: ");
             filePath = input.nextLine();
-            System.out.print("Running with default communications port COM3.\n");
-            portName = "COM3";
+            System.out.print("Running with default communications port COM1.\n");
+            portName = "COM1";
         }
         else
         {
@@ -67,7 +67,7 @@ public class Main
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
         
-        SerialPort serial = new SerialPort("COM3");
+        SerialPort serial = new SerialPort(portName);
         TestRunner testRunner = new TestRunner(new SerialCommHandler(serial));
         TestController controller = new TestController(new TestReader(ini));
         
