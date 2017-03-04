@@ -1,0 +1,1 @@
+java -cp "*" com.mycompany.protocol.Main 
